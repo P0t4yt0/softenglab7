@@ -1,25 +1,18 @@
 import tkinter as tk
-# Import ttkbootstrap instead of tkinter.ttk
 import ttkbootstrap as ttk
 from tkinter import messagebox
-# In a real app, you'd import bcrypt
-# import bcrypt 
+import subprocess # NEW: For launching a new script
+import sys        # NEW: For getting the current Python executable
 
 class App(ttk.Window): # Inherit from ttk.Window
-    """
-    Main application window for the Login Form.
-    """
+
     def __init__(self):
-        # Use super() with a theme
-        # Other good themes: "superhero" (dark), "pulse", "cosmo"
         super().__init__(themename="litera")
 
-        # --- Window Configuration (Aligned with Scope) ---
-        self.title("JBSON Hardware - POS & Inventory System") # Changed Title
+        self.title("JBSON Hardware - POS & Inventory System")
         self.geometry("500x550")
         self.resizable(False, False)
         
-        # Call the new centering function
         self.center_window()
 
         # --- Main Frame ---
@@ -41,7 +34,6 @@ class App(ttk.Window): # Inherit from ttk.Window
         title_label.grid(row=0, column=0, columnspan=2, pady=(0, 20))
 
         # --- Helper Text (Placeholder) Logic ---
-        # (This logic is excellent and unchanged)
         def on_focus_in(event):
             """Called when the widget gets focus."""
             widget = event.widget
@@ -174,11 +166,11 @@ class App(ttk.Window): # Inherit from ttk.Window
         self.geometry(f'{width}x{height}+{x}+{y}')
 
 
-    # --- (B) Form Validation and Functionality (Modified for Scope) ---
+    # --- (B) Form Validation and Functionality ---
 
     def validate_and_submit(self):
         """
-        Performs validation and then "handles" the data.
+        Performs validation and then "handles" the data by launching the Main Menu.
         """
         self.error_label.config(text="") 
         
@@ -188,7 +180,7 @@ class App(ttk.Window): # Inherit from ttk.Window
         role = self.role_var.get()
         location = self.location_var.get()
 
-        # --- 1. Validation (Same as before) ---
+        # --- 1. Validation ---
         if username == "" or username == self.username_entry.placeholder:
             self.error_label.config(text="Error: Username is required.")
             return
@@ -205,44 +197,36 @@ class App(ttk.Window): # Inherit from ttk.Window
             self.error_label.config(text="Error: Password must be at least 8 characters.")
             return
 
-        # --- 2. Functionality (Simulating Scope Logic) ---
+        # --- 2. Functionality (Mock Authentication) ---
         
-        # SCOPE: "applies a bcrypt hashing algorithm"
-        # In a real app, you would not have the password. You would:
-        # 1. Fetch the hashed_password from the MySQL 8.4 database for this 'username'.
-        # 2. Check it: 
-        #    is_valid = bcrypt.checkpw(password.encode('utf-8'), hashed_password_from_db)
-        # 3. If is_valid is False, show an error.
-        
-        # --- MOCK AUTHENTICATION (for this demo) ---
-        # We'll pretend to check credentials
+        # Successful login conditions
         if (username == "admin@jbson.com" and password == "AdminPass123" and role == "Administrator") or \
            (username == "employee@jbson.com" and password == "EmployeePass123" and role == "Employee"):
             
-            # SCOPE: "Activity Log module ... records activities such as logins"
             print("--- LOGIN ATTEMPT (SUCCESS) ---")
-            print(f"  [Activity Log]: User '{username}' ({role}) logged in at {location}.")
-            print(f"  Username: {username}")
-            print(f"  Password: {password} (in a real app, you'd never print this!)")
-            print(f"  Remember Me: {remember_me}")
-            print(f"  Login Role: {role}")
-            print(f"  Location: {location}")
-            print("---------------------------------")
+            print(f" [Activity Log]: User '{username}' ({role}) logged in at {location}.")
             
             messagebox.showinfo(
                 "Login Successful", 
                 f"Welcome, {username}!\n\nYou have logged in as an '{role}' at the '{location}'."
             )
             
-            # Here you would destroy this window and open the main app window
-            # self.destroy() 
-            # main_app = MainApplication(role) # Pass the role to the main app
+            # CRITICAL STEP: Destroy the login window and launch main_menu.py
+            self.destroy() 
             
-            self.clear_form()
+            # Use subprocess to launch main_menu.py, passing role and location as arguments
+            try:
+                # [sys.executable] ensures it uses the same python interpreter
+                # ["main_menu.py"] is the script to run
+                # [role, location] are arguments passed to the new script
+                subprocess.Popen([sys.executable, "main_menu.py", role, location])
+            except Exception as e:
+                # If launching fails, show an error and exit gracefully
+                messagebox.showerror("Launch Error", f"Could not launch main_menu.py.\nError: {e}\n\nPlease ensure the file is in the same directory.")
+                self.quit() # Exit the application if the main menu can't launch
             
         else:
             # Failed login
-            # SCOPE: "Activity Log module ... records activities" (e.g., failed logins)
             print(f"[Activity Log]: FAILED login attempt for user '{username}'.")
             self.error_label.config(text="Error: Invalid username, password, or role.")
             return
