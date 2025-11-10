@@ -1,5 +1,7 @@
 import tkinter as tk
 import ttkbootstrap as ttk
+import subprocess
+import sys
 from tkinter import messagebox
 
 class ProductSearchApp(ttk.Window):
@@ -132,7 +134,6 @@ class ProductSearchApp(ttk.Window):
         sort_radio3.pack(side="left", padx=5)
 
         # 7. Hidden Field (for demonstration)
-        # This holds a "session ID" or "user token" that isn't shown
         self.hidden_session_id = "user_session_abc123"
         # (Control count: 7 visible + 1 hidden = 8)
 
@@ -145,7 +146,7 @@ class ProductSearchApp(ttk.Window):
         )
         self.error_label.grid(row=7, column=0, columnspan=2, pady=(10, 0))
 
-        # --- Button Frame (8 & 9. Buttons) ---
+        # --- Button Frame (8, 9, 10. Buttons) ---
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=8, column=0, columnspan=2, pady=15)
 
@@ -164,6 +165,15 @@ class ProductSearchApp(ttk.Window):
             bootstyle="secondary-outline"
         )
         clear_button.pack(side="left", padx=10, ipady=5)
+        
+        # 10. Back to Main Menu Button (NEWLY ADDED)
+        back_button = ttk.Button(
+            button_frame, 
+            text="Back to Main Menu", 
+            command=self.open_main_menu,
+            bootstyle="danger-outline"
+        )
+        back_button.pack(side="left", padx=10, ipady=5)
 
         # --- Separator ---
         results_sep = ttk.Separator(main_frame, bootstyle="primary")
@@ -173,7 +183,7 @@ class ProductSearchApp(ttk.Window):
         results_label = ttk.Label(main_frame, text="Search Results:", font=("Helvetica", 12, "bold"))
         results_label.grid(row=10, column=0, columnspan=2, sticky="w", pady=5)
         
-        # 10. Results Display (Textarea)
+        # 11. Results Display (Textarea)
         self.results_text = tk.Text(
             main_frame, 
             height=10, 
@@ -194,7 +204,6 @@ class ProductSearchApp(ttk.Window):
         x = (self.winfo_screenwidth() // 2) - (width // 2)
         y = (self.winfo_screenheight() // 2) - (height // 2)
         self.geometry(f'{width}x{height}+{x}+{y}')
-
 
     # --- (B) Form Validation and Functionality ---
 
@@ -226,7 +235,6 @@ class ProductSearchApp(ttk.Window):
 
         # --- 3. Functionality (Data Handling & UI Update) ---
         # If all validation passes, we "handle" the data.
-        # In a real app, this would query the MySQL DB.
         
         print("--- SEARCH QUERY (SUCCESS) ---")
         print(f"  Session ID: {self.hidden_session_id}")
@@ -243,23 +251,24 @@ class ProductSearchApp(ttk.Window):
         self.results_text.delete("1.0", tk.END) # Clear previous results
         
         # Create mock results based on the search
-        mock_results = f"Searching for '{search_term}'...\n\n"
+        mock_results = f"Searching for '{search_term}' (Category: {category}, In Stock: {in_stock})...\n\n"
         mock_results += "Found 3 matching products:\n\n"
         mock_results += "1. [Hardware] Claw Hammer, 16oz\n"
-        mock_results += "   ID: HW-0012\n"
-        mock_results += "   Stock: 42 (Manila), 18 (Quezon City)\n"
-        mock_results += "   Price: ₱350.00\n\n"
+        mock_results += "  ID: HW-0012\n"
+        mock_results += "  Stock: 42 (Manila), 18 (Quezon City)\n"
+        mock_results += "  Price: ₱350.00\n\n"
         
         mock_results += "2. [Tools] Hammer Drill, 18V Kit\n"
-        mock_results += "   ID: TL-0004\n"
-        mock_results += "   Stock: 8 (Manila)\n"
-        mock_results += "   Price: ₱4,200.00\n\n"
+        mock_results += "  ID: TL-0004\n"
+        mock_results += "  Stock: 8 (Manila)\n"
+        mock_results += "  Price: ₱4,200.00\n\n"
         
-        mock_results += "3. [Hardware] Sledge Hammer, 8lb\n"
-        mock_results += "   ID: HW-0045\n"
-        mock_results += "   Stock: 0 (Out of Stock)\n"
-        mock_results += "   Price: ₱875.00\n"
-        
+        if not in_stock:
+             mock_results += "3. [Hardware] Sledge Hammer, 8lb\n"
+             mock_results += "  ID: HW-0045\n"
+             mock_results += "  Stock: 0 (Out of Stock)\n"
+             mock_results += "  Price: ₱875.00\n"
+
         self.results_text.insert("1.0", mock_results)
         self.results_text.config(state="disabled") # Make read-only
 
@@ -289,6 +298,21 @@ class ProductSearchApp(ttk.Window):
         
         # Put focus back on the first field
         self.search_entry.focus_set()
+
+    def open_main_menu(self):
+        """
+        Closes the current window and launches the main menu application
+        via a new subprocess, ensuring clean separation.
+        """
+        self.destroy() # Close the search window
+        try:
+            # Launch the main menu file (main_menu.py)
+            subprocess.Popen([sys.executable, "main_menu.py"])
+        except Exception as e:
+            # Note: This error message will likely be missed as the window is closed,
+            # but it is good practice to include it for debugging.
+            print(f"Error launching main_menu.py: {e}")
+            # If the launch fails, we can't show an error box easily, but we'll print to console.
 
 
 # --- Main execution ---
